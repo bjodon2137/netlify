@@ -1,25 +1,24 @@
-// netlify/functions/loadZenfolioGallery.js
+const https = require('https');
 
-const fetch = require('node-fetch');
+exports.handler = async function (event, context) {
+  const zenfolioURL = 'https://www.zenfolio.com/photographybysabrina/e/p796481822';
 
-exports.handler = async function(event, context) {
-  try {
-    const ZENFOLIO_ENDPOINT = "https://api.zenfolio.com/api/1.8/zfapi.asmx/LoadPhotoSet?authkey=&photosetId=796481822";
-    const response = await fetch(ZENFOLIO_ENDPOINT);
-    const body = await response.text();
-
-    return {
-      statusCode: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Content-Type': 'application/xml'
-      },
-      body
-    };
-  } catch (error) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: 'Failed to fetch gallery', details: error.message })
-    };
-  }
+  return new Promise((resolve, reject) => {
+    https.get(zenfolioURL, (res) => {
+      let data = '';
+      res.on('data', (chunk) => data += chunk);
+      res.on('end', () => {
+        resolve({
+          statusCode: 200,
+          headers: { 'Content-Type': 'text/html' },
+          body: data,
+        });
+      });
+    }).on('error', (e) => {
+      resolve({
+        statusCode: 500,
+        body: `Error: ${e.message}`,
+      });
+    });
+  });
 };
